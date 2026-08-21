@@ -231,12 +231,14 @@ function renderWeekdayChart(trades){
     data: { labels: wdLabels, datasets: [{ data: wdData, backgroundColor: wdColors, borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 20, bottom: 10 } },
       plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
       scales: {
         x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
         y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
       }
-    }
+    },
+    plugins: [barValueLabelPlugin]
   });
 }
 
@@ -263,12 +265,14 @@ function renderMonthlyChart(trades, year){
     data: { labels, datasets: [{ data: sums, backgroundColor: colors, borderRadius: 4, maxBarThickness: 30, categoryPercentage: 0.6, barPercentage: 0.9 }] },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 20, bottom: 10 } },
       plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
       scales: {
         x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
         y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
       }
-    }
+    },
+    plugins: [barValueLabelPlugin]
   });
 }
 
@@ -293,6 +297,7 @@ const barValueLabelPlugin = {
     ctx.fillStyle = inkC;
     meta.data.forEach((bar, i) => {
       const val = data[i];
+      if(!val) return; // skip $0 bars (e.g. months/days with no trades)
       const label = fmtMoney(val);
       const y = val >= 0 ? bar.y - 6 : bar.y + 14;
       ctx.fillText(label, bar.x, y);

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Period PnL</title>
+<script>
+// Applied before the stylesheet paints anything, so the page never flashes
+// the wrong theme on load.
+(function(){
+  try{
+    var saved = localStorage.getItem('mmtrades-theme');
+    var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){ /* localStorage unavailable; defaults to light */ }
+})();
+</script>
+<style>
+  :root{
+    --ink:#14171c;
+    --muted:#6b7280;
+    --line:#e7e9ec;
+    --green:#0f8a4c;
+    --green-bg:#eaf7ef;
+    --red:#d1352b;
+    --red-bg:#fdeeed;
+    --accent:#2f6fed;
+    --accent-bg:rgba(47,111,237,0.12);
+    --panel:#fafbfc;
+    --bg:#ffffff;
+    --btn-bg:#ffffff;
+    --hover-bg:#f4f5f6;
+    --synced-c:#a7abb2;
+    --stale-c:#e0a83b;
+    --grid-line:#f0f1f3;
+  }
+  html[data-theme="dark"]{
+    --ink:#e7e9ee;
+    --muted:#9aa1ac;
+    --line:#2a2f38;
+    --green:#33c47a;
+    --green-bg:rgba(51,196,122,0.14);
+    --red:#f0635a;
+    --red-bg:rgba(240,99,90,0.14);
+    --accent:#6c93f5;
+    --accent-bg:rgba(108,147,245,0.16);
+    --panel:#171a1f;
+    --bg:#0f1115;
+    --btn-bg:#1b1e24;
+    --hover-bg:#20242b;
+    --synced-c:#5b6068;
+    --stale-c:#e0a83b;
+    --grid-line:#20242b;
+  }
+  *{ box-sizing:border-box; }
+  html, body{ height:100%; min-height:100vh; }
+  body{
+    margin:0; padding:28px 32px 60px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    max-width:1180px; margin-left:auto; margin-right:auto;
+  }
+  .top-bar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  h1{ font-size:20px; margin:0; font-weight:700; letter-spacing:-0.01em; }
+  .top-actions{ display:flex; align-items:center; gap:10px; }
+  .icon-btn{
+    border:1px solid var(--line); background:var(--btn-bg); border-radius:8px;
+    width:32px; height:32px; cursor:pointer; font-size:15px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:hover{ background:var(--hover-bg); }
+  .icon-btn.spin svg{ animation:spin 0.8s linear infinite; }
+  @keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .status-line{ font-size:12px; color:var(--synced-c); margin-bottom:22px; }
+  .status-line.stale{ color:var(--stale-c); }
+  .section-label{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:26px 0 10px; }
+  .chart-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px 12px; margin-bottom:20px;
+  }
+  .chart-card h3{ margin:0 0 12px; font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; justify-content:space-between; }
+  .chart-card .chart-body{ position:relative; height:230px; }
+  .chart-card.weekly .chart-body{ height:260px; }
+  .month-nav{ display:flex; align-items:center; gap:8px; font-weight:500; }
+  .month-nav button{
+    border:1px solid var(--line); background:var(--btn-bg); border-radius:6px;
+    width:24px; height:24px; cursor:pointer; font-size:12px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .month-nav button:hover{ background:var(--hover-bg); }
+  .month-nav span{ font-size:12px; color:var(--muted); min-width:34px; text-align:center; }
+  .summary-pill{ font-size:13px; color:var(--muted); display:flex; gap:14px; align-items:center; margin-top:2px; }
+  .summary-pill b{ color:var(--ink); }
+  .pnl-pos{ color:var(--green); font-weight:700; }
+  .pnl-neg{ color:var(--red); font-weight:700; }
+  footer{ text-align:center; font-size:11px; color:var(--muted); margin-top:8px; }
+  @media (max-width:640px){
+    body{ padding:20px 16px 40px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <h1>Period PnL</h1>
+    <div class="top-actions">
+      <button class="icon-btn" id="syncBtn" title="Refresh with the latest synced data">
+        <svg id="syncIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">
+        <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    </div>
+  </div>
+  <div class="status-line" id="statusLine">&nbsp;</div>
+
+  <div class="section-label">Day &amp; Calendar Breakdown</div>
+
+  <div class="chart-card">
+    <h3>P&amp;L by Day of Week</h3>
+    <div class="chart-body"><canvas id="weekdayChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h3>
+      <span id="monthlyChartTitle">PnL by Month</span>
+      <span class="month-nav">
+        <button id="yearPrev" title="Previous year">‹</button>
+        <span id="yearLabel">2026</span>
+        <button id="yearNext" title="Next year">›</button>
+      </span>
+    </h3>
+    <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
+  </div>
+
+  <div class="section-label">All-Time Weekly Breakdown</div>
+
+  <div class="chart-card weekly">
+    <h3>
+      <span>PnL by Week</span>
+      <span class="summary-pill" id="weeklyRangePill"></span>
+    </h3>
+    <div class="chart-body"><canvas id="weeklyChart"></canvas></div>
+  </div>
+
+  <footer>Synced from Notion &middot; mirrors the MMTrades Dashboard data source</footer>
+
+<script>
+// SYNC_MARKER_START
+// Auto-updated by .github/workflows/sync.yml — do not hand-edit between the markers.
+const DATA_SYNCED_AT = "2026-08-21T00:00:00.000Z";
+const TRADES = [{"date":"2026-01-05","pnl":-67.18},{"date":"2026-01-06","pnl":208.73},{"date":"2026-01-07","pnl":-45.56},{"date":"2026-01-07","pnl":-86.12},{"date":"2026-01-09","pnl":-156.24},{"date":"2026-01-09","pnl":-47.38},{"date":"2026-01-12","pnl":26.02},{"date":"2026-01-13","pnl":18.44},{"date":"2026-01-13","pnl":-80.7},{"date":"2026-01-13","pnl":-44.37},{"date":"2026-02-06","pnl":-50.73},{"date":"2026-02-06","pnl":-48},{"date":"2026-02-10","pnl":-23.96},{"date":"2026-02-11","pnl":131.47},{"date":"2026-02-13","pnl":173.26},{"date":"2026-02-19","pnl":-80.76},{"date":"2026-02-19","pnl":-66.46},{"date":"2026-02-23","pnl":70.69},{"date":"2026-02-24","pnl":-48.09},{"date":"2026-02-24","pnl":-9.27},{"date":"2026-02-26","pnl":31.61},{"date":"2026-02-27","pnl":-27.58},{"date":"2026-02-27","pnl":-61.94},{"date":"2026-03-09","pnl":-48.13},{"date":"2026-03-11","pnl":145.03},{"date":"2026-03-18","pnl":1.74},{"date":"2026-03-23","pnl":-21.34},{"date":"2026-04-09","pnl":150.48},{"date":"2026-04-10","pnl":-29.85},{"date":"2026-04-22","pnl":-22.78},{"date":"2026-04-29","pnl":-40.22},{"date":"2026-05-04","pnl":-23.72},{"date":"2026-05-15","pnl":-23.74},{"date":"2026-05-22","pnl":-38.47},{"date":"2026-05-28","pnl":-12.66},{"date":"2026-07-09","pnl":-48.79},{"date":"2026-07-16","pnl":199.87},{"date":"2026-07-17","pnl":41.31},{"date":"2026-07-22","pnl":-48.53},{"date":"2026-07-23","pnl":-38.84}];
+// SYNC_MARKER_END
+</script>
+<script>
+function fmtMoney(n){
+  const sign = n < 0 ? '-' : '';
+  return sign + '$' + Math.abs(n).toFixed(2);
+}
+
+function cv(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// ---- Load Chart.js, trying a few mirrors in case one is blocked/unreachable ----
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve(true);
+    s.onerror = () => reject(new Error('failed to load ' + src));
+    document.head.appendChild(s);
+  });
+}
+const CHART_JS_MIRRORS = [
+  "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
+  "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+  "https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js",
+];
+async function loadChartJs(){
+  for(const url of CHART_JS_MIRRORS){
+    try{
+      await loadScript(url);
+      if(typeof Chart !== 'undefined') return true;
+    }catch(e){ /* try next mirror */ }
+  }
+  return false;
+}
+
+// ---- Status line (mirrors the other MMTrades dashboards' staleness check) ----
+function updateStatusLine(){
+  const statusLine = document.getElementById('statusLine');
+  if(!DATA_SYNCED_AT){ statusLine.textContent = ''; return; }
+  const synced = new Date(DATA_SYNCED_AT);
+  const ageMin = (Date.now() - synced.getTime()) / 60000;
+  const stale = ageMin > 30;
+  statusLine.className = 'status-line' + (stale ? ' stale' : '');
+  statusLine.textContent = `Last synced ${synced.toLocaleString()}${stale ? ' — sync may be delayed' : ''}`;
+}
+
+// ---- Day of Week chart: cumulative P&L for Mon–Fri across all trades ----
+let weekdayChartInstance = null;
+function weekdayAggregate(trades){
+  const sums = [0,0,0,0,0];
+  trades.forEach(t => {
+    const d = new Date(t.date + "T00:00:00");
+    const dow = d.getDay(); // 0=Sun .. 6=Sat
+    if(dow >= 1 && dow <= 5) sums[dow-1] += Number(t.pnl) || 0;
+  });
+  return sums;
+}
+function renderWeekdayChart(trades){
+  const mutedC = cv('--muted');
+  const gridC = cv('--grid-line');
+  const wdLabels = ['Mon','Tue','Wed','Thu','Fri'];
+  const wdData = weekdayAggregate(trades);
+  const wdColors = wdData.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
+
+  const ctx = document.getElementById('weekdayChart').getContext('2d');
+  if(weekdayChartInstance) weekdayChartInstance.destroy();
+  weekdayChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: wdLabels, datasets: [{ data: wdData, backgroundColor: wdColors, borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
+      scales: {
+        x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
+        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
+      }
+    }
+  });
+}
+
+// ---- Monthly chart: sum of P&L per calendar month for a given year, with year nav ----
+let monthlyChartInstance = null;
+let monthlyYear = new Date().getFullYear();
+function renderMonthlyChart(trades, year){
+  const sums = new Array(12).fill(0);
+  trades.forEach(t => {
+    const d = new Date(t.date + "T00:00:00");
+    if(d.getFullYear() === year) sums[d.getMonth()] += Number(t.pnl) || 0;
+  });
+  const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mutedC = cv('--muted');
+  const gridC = cv('--grid-line');
+  const colors = sums.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
+
+  document.getElementById('yearLabel').textContent = year;
+
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  if(monthlyChartInstance) monthlyChartInstance.destroy();
+  monthlyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: sums, backgroundColor: colors, borderRadius: 4, maxBarThickness: 30, categoryPercentage: 0.6, barPercentage: 0.9 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
+      scales: {
+        x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
+        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
+      }
+    }
+  });
+}
+
+// ---- Weekly chart: sum of P&L per trading week (Mon–Sun bucket, labeled by
+// that week's Monday), across all-time. Weeks with zero trades are skipped
+// entirely rather than shown as empty bars, matching how sparse weeks read
+// most clearly in a waterfall-style view. ----
+let weeklyChartInstance = null;
+
+// A small in-canvas label plugin: draws the dollar value above/below each bar,
+// the way the ChartBase weekly report renders its values directly on the bars.
+const barValueLabelPlugin = {
+  id: 'barValueLabel',
+  afterDatasetsDraw(chart){
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    const data = chart.data.datasets[0].data;
+    const inkC = cv('--ink');
+    ctx.save();
+    ctx.font = '600 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = inkC;
+    meta.data.forEach((bar, i) => {
+      const val = data[i];
+      const label = fmtMoney(val);
+      const y = val >= 0 ? bar.y - 6 : bar.y + 14;
+      ctx.fillText(label, bar.x, y);
+    });
+    ctx.restore();
+  }
+};
+
+function mondayOf(dateObj){
+  const d = new Date(dateObj);
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const diff = day === 0 ? -6 : 1 - day; // shift back to Monday
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function weeklyAggregate(trades){
+  const buckets = {}; // isoMondayDate -> sum
+  trades.forEach(t => {
+    const d = new Date(t.date + "T00:00:00");
+    const monday = mondayOf(d);
+    const key = monday.toISOString().slice(0,10);
+    buckets[key] = (buckets[key] || 0) + (Number(t.pnl) || 0);
+  });
+  const keys = Object.keys(buckets).sort();
+  const labels = keys.map(k => {
+    const d = new Date(k + "T00:00:00");
+    return d.toLocaleDateString('en-US', { month:'short', day:'2-digit' });
+  });
+  const values = keys.map(k => Math.round(buckets[k] * 100) / 100);
+  return { keys, labels, values };
+}
+function renderWeeklyChart(trades){
+  const { keys, labels, values } = weeklyAggregate(trades);
+  const mutedC = cv('--muted');
+  const gridC = cv('--grid-line');
+  const colors = values.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
+
+  if(keys.length){
+    const first = new Date(keys[0] + "T00:00:00").toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const last = new Date(keys[keys.length-1] + "T00:00:00").toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    document.getElementById('weeklyRangePill').textContent = `${first} – ${last}`;
+  }
+
+  const ctx = document.getElementById('weeklyChart').getContext('2d');
+  if(weeklyChartInstance) weeklyChartInstance.destroy();
+  weeklyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, maxBarThickness: 34, categoryPercentage: 0.7, barPercentage: 0.9 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 20, bottom: 10 } },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color:mutedC, font:{size:10}, maxRotation:0, autoSkip:true, maxTicksLimit: 14 }, grid:{ display:false } },
+        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
+      }
+    },
+    plugins: [barValueLabelPlugin]
+  });
+}
+
+function renderAll(){
+  if(typeof Chart === 'undefined'){
+    document.querySelectorAll('.chart-body').forEach(el => {
+      el.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);text-align:center;padding:0 12px;">Charts library couldn\'t load (network/ad-blocker may be blocking it).</div>';
+    });
+    return;
+  }
+  renderWeekdayChart(TRADES);
+  renderMonthlyChart(TRADES, monthlyYear);
+  renderWeeklyChart(TRADES);
+}
+
+document.getElementById('yearPrev').addEventListener('click', () => { monthlyYear -= 1; renderMonthlyChart(TRADES, monthlyYear); });
+document.getElementById('yearNext').addEventListener('click', () => { monthlyYear += 1; renderMonthlyChart(TRADES, monthlyYear); });
+
+// ---- Theme toggle ----
+function applyThemeButtonIcon(){
+  const theme = document.documentElement.getAttribute('data-theme');
+  const icon = document.getElementById('themeIcon');
+  icon.innerHTML = theme === 'dark'
+    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+applyThemeButtonIcon();
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('mmtrades-theme', next); }catch(e){ /* storage may be blocked */ }
+  applyThemeButtonIcon();
+  if(typeof Chart !== 'undefined') renderAll();
+});
+
+// ---- Sync button: re-fetches this page's own HTML and pulls the freshest
+// TRADES out of the SYNC_MARKER block, same pattern as the other dashboards ----
+const syncBtn = document.getElementById('syncBtn');
+const syncIcon = document.getElementById('syncIcon');
+async function refetchSyncedData(){
+  const url = window.location.pathname + '?t=' + Date.now();
+  const res = await fetch(url, { cache: 'no-store' });
+  if(!res.ok) throw new Error('Fetch failed: ' + res.status);
+  const html = await res.text();
+  const m = html.match(/\/\/ SYNC_MARKER_START([\s\S]*?)\/\/ SYNC_MARKER_END/);
+  if(!m) throw new Error('SYNC_MARKER block not found');
+  const block = m[1];
+  const syncedAtMatch = block.match(/const DATA_SYNCED_AT = "([^"]*)"/);
+  const tradesMatch = block.match(/const TRADES = (\[[\s\S]*?\]);/);
+  if(syncedAtMatch) window.DATA_SYNCED_AT_LIVE = syncedAtMatch[1];
+  if(tradesMatch) window.TRADES_LIVE = JSON.parse(tradesMatch[1]);
+}
+async function runSync(){
+  syncBtn.disabled = true;
+  syncIcon.classList.add('spin');
+  syncBtn.title = 'Syncing…';
+  try{
+    await refetchSyncedData();
+    if(window.TRADES_LIVE){
+      TRADES.length = 0;
+      TRADES.push(...window.TRADES_LIVE);
+    }
+    renderAll();
+    updateStatusLine();
+    syncBtn.title = 'Synced';
+  }catch(err){
+    console.error(err);
+    syncBtn.title = 'Sync failed — click to retry';
+  }finally{
+    syncIcon.classList.remove('spin');
+    syncBtn.disabled = false;
+    setTimeout(() => { syncBtn.title = 'Refresh with the latest synced data'; }, 2000);
+  }
+}
+syncBtn.addEventListener('click', runSync);
+
+// Same 5-minute auto-refresh cadence as the other MMTrades dashboards
+const AUTO_REFRESH_MS = 5 * 60 * 1000;
+setInterval(() => {
+  if(document.visibilityState === 'visible') runSync();
+}, AUTO_REFRESH_MS);
+
+updateStatusLine();
+loadChartJs().then(renderAll);
+</script>
+</body>
+</html>

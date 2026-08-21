@@ -80,8 +80,13 @@
     padding:16px 18px 12px; margin-bottom:20px;
   }
   .chart-card h3{ margin:0 0 12px; font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; justify-content:space-between; }
-  .chart-card .chart-body{ position:relative; height:230px; }
-  .chart-card.weekly .chart-body{ height:260px; }
+  .chart-card .chart-body{ position:relative; height:340px; }
+  .chart-card.weekly .chart-body{ height:380px; }
+  .chart-row{ display:flex; gap:20px; align-items:stretch; }
+  .chart-row .chart-card{ flex:1; min-width:0; margin-bottom:0; }
+  @media (max-width:760px){
+    .chart-row{ flex-direction:column; }
+  }
   .month-nav{ display:flex; align-items:center; gap:8px; font-weight:500; }
   .month-nav button{
     border:1px solid var(--line); background:var(--btn-bg); border-radius:6px;
@@ -117,21 +122,23 @@
 
   <div class="section-label">Day &amp; Calendar Breakdown</div>
 
-  <div class="chart-card">
-    <h3>P&amp;L by Day of Week</h3>
-    <div class="chart-body"><canvas id="weekdayChart"></canvas></div>
-  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>P&amp;L by Day of Week</h3>
+      <div class="chart-body"><canvas id="weekdayChart"></canvas></div>
+    </div>
 
-  <div class="chart-card">
-    <h3>
-      <span id="monthlyChartTitle">PnL by Month</span>
-      <span class="month-nav">
-        <button id="yearPrev" title="Previous year">‹</button>
-        <span id="yearLabel">2026</span>
-        <button id="yearNext" title="Next year">›</button>
-      </span>
-    </h3>
-    <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
+    <div class="chart-card">
+      <h3>
+        <span id="monthlyChartTitle">PnL by Month</span>
+        <span class="month-nav">
+          <button id="yearPrev" title="Previous year">‹</button>
+          <span id="yearLabel">2026</span>
+          <button id="yearNext" title="Next year">›</button>
+        </span>
+      </h3>
+      <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
+    </div>
   </div>
 
   <div class="section-label">All-Time Weekly Breakdown</div>

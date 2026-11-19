@@ -34,6 +34,8 @@
     --synced-c:#a7abb2;
     --stale-c:#e0a83b;
     --grid-line:#f0f1f3;
+    --green-rgb:15,138,76;
+    --red-rgb:209,53,43;
   }
   html[data-theme="dark"]{
     --ink:#e7e9ee;
@@ -52,6 +54,8 @@
     --synced-c:#5b6068;
     --stale-c:#e0a83b;
     --grid-line:#20242b;
+    --green-rgb:51,196,122;
+    --red-rgb:240,99,90;
   }
   *{ box-sizing:border-box; }
   html, body{ height:100%; min-height:100vh; }
@@ -100,6 +104,22 @@
   .summary-pill b{ color:var(--ink); }
   .pnl-pos{ color:var(--green); font-weight:700; }
   .pnl-neg{ color:var(--red); font-weight:700; }
+  .seg-btn{
+    border:1px solid var(--line); background:var(--btn-bg); border-radius:6px;
+    padding:4px 10px; cursor:pointer; font-size:12px; color:var(--ink); font-weight:500;
+  }
+  .seg-btn:hover{ background:var(--hover-bg); }
+  .heat-wrap{ overflow-x:auto; }
+  table.heat{ border-collapse:separate; border-spacing:4px; width:100%; min-width:760px; table-layout:fixed; }
+  table.heat th{ font-size:11px; font-weight:600; color:var(--muted); padding:4px 2px; text-align:center; }
+  table.heat th.rowh{ text-align:right; padding-right:8px; width:52px; }
+  table.heat td{
+    height:56px; border-radius:6px; text-align:center; vertical-align:middle;
+    font-size:12px; font-weight:700; color:var(--ink); background:var(--hover-bg);
+  }
+  table.heat td small{ display:block; font-size:10px; font-weight:500; opacity:.7; margin-top:2px; }
+  table.heat td.empty{ color:var(--synced-c); font-weight:400; background:transparent; border:1px dashed var(--line); }
+  table.heat td.total{ background:transparent; border:1px solid var(--line); }
   footer{ text-align:center; font-size:11px; color:var(--muted); margin-top:8px; }
   @media (max-width:640px){
     body{ padding:20px 16px 40px; }
@@ -140,11 +160,22 @@
   </div>
 </div>
 
+<div class="chart-card" style="margin-top:20px">
+  <h3>
+    <span>P&amp;L Heatmap &middot; Weekday &times; Month</span>
+    <span class="summary-pill" id="heatYearLabel"></span>
+  </h3>
+  <div class="heat-wrap" id="heatmap"></div>
+</div>
+
 <div class="section-label">All-Time Weekly Breakdown</div>
 <div class="chart-card weekly">
   <h3>
     <span>PnL by Week</span>
-    <span class="summary-pill" id="weeklyRangePill"></span>
+    <span class="summary-pill">
+      <span id="weeklyRangePill"></span>
+      <button class="seg-btn" id="weeklyOrderBtn" title="Reverse the order of the weeks">Oldest first &darr;</button>
+    </span>
   </h3>
   <div class="chart-body" id="weeklyBody"><canvas id="weeklyChart"></canvas></div>
 </div>
@@ -154,7 +185,7 @@
 <script>
 // SYNC_MARKER_START
 // Auto-updated by .github/workflows/sync.yml — do not hand-edit between the markers.
-const DATA_SYNCED_AT = "2026-11-19T10:50:14.179Z";
+const DATA_SYNCED_AT = "2026-11-19T10:35:14.757Z";
 const TRADES = [{"date":"2026-01-05","pnl":-67.18},{"date":"2026-01-06","pnl":208.73},{"date":"2026-01-07","pnl":-45.56},{"date":"2026-01-07","pnl":-86.12},{"date":"2026-01-09","pnl":-156.24},{"date":"2026-01-09","pnl":-47.38},{"date":"2026-01-12","pnl":26.02},{"date":"2026-01-13","pnl":18.44},{"date":"2026-01-13","pnl":-80.7},{"date":"2026-01-13","pnl":-44.37},{"date":"2026-02-06","pnl":-50.73},{"date":"2026-02-06","pnl":-48},{"date":"2026-02-10","pnl":-23.96},{"date":"2026-02-11","pnl":131.47},{"date":"2026-02-13","pnl":173.26},{"date":"2026-02-19","pnl":-80.76},{"date":"2026-02-19","pnl":-66.46},{"date":"2026-02-23","pnl":70.69},{"date":"2026-02-24","pnl":-48.09},{"date":"2026-02-24","pnl":-9.27},{"date":"2026-02-26","pnl":31.61},{"date":"2026-02-27","pnl":-27.58},{"date":"2026-02-27","pnl":-61.94},{"date":"2026-03-09","pnl":-48.13},{"date":"2026-03-11","pnl":145.03},{"date":"2026-03-18","pnl":1.74},{"date":"2026-03-23","pnl":-21.34},{"date":"2026-04-09","pnl":150.48},{"date":"2026-04-10","pnl":-29.85},{"date":"2026-04-22","pnl":-22.78},{"date":"2026-04-29","pnl":-40.22},{"date":"2026-05-04","pnl":-23.72},{"date":"2026-05-15","pnl":-23.74},{"date":"2026-05-22","pnl":-38.47},{"date":"2026-05-28","pnl":-12.66},{"date":"2026-07-09","pnl":-48.79},{"date":"2026-07-16","pnl":199.87},{"date":"2026-07-17","pnl":41.31},{"date":"2026-07-22","pnl":-48.53},{"date":"2026-07-23","pnl":-38.84},{"date":"2026-09-04","pnl":-39.78},{"date":"2026-09-10","pnl":-63},{"date":"2026-09-14","pnl":-48.85},{"date":"2026-09-17","pnl":61.69},{"date":"2026-09-17","pnl":-49.16},{"date":"2026-09-17","pnl":-36.59},{"date":"2026-09-22","pnl":101},{"date":"2026-09-23","pnl":114.56},{"date":"2026-09-25","pnl":-51.76},{"date":"2026-10-05","pnl":-52.7},{"date":"2026-10-19","pnl":172.66},{"date":"2026-10-20","pnl":103.98},{"date":"2026-11-09","pnl":0.92},{"date":"2026-11-12","pnl":247},{"date":"2026-11-13","pnl":-61.6},{"date":"2026-11-18","pnl":17.82},{"date":"2026-11-18","pnl":2.82}];
 // SYNC_MARKER_END
 </script>
@@ -166,6 +197,13 @@ function fmtMoney(n){
 }
 function cv(name){
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+// Dates are always handled in local time. localKey() builds YYYY-MM-DD from the
+// LOCAL year/month/day (toISOString() converts to UTC, which shifts the date by
+// a day in time zones ahead of UTC, such as Nairobi).
+function parseLocal(str){ return new Date(str + "T00:00:00"); }
+function localKey(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
 // ---- Load Chart.js, trying a few mirrors in case one is blocked/unreachable ----
@@ -215,13 +253,24 @@ const barValueLabelPlugin = {
     const meta = chart.getDatasetMeta(0);
     const data = chart.data.datasets[0].data;
     const inkC = cv('--ink');
+    const mutedC = cv('--muted');
+    const counts = chart.data.datasets[0].counts; // optional: trade count per bar
     ctx.save();
     ctx.font = '600 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = inkC;
     meta.data.forEach((bar, i) => {
       const val = data[i];
-      if(!val) return; // skip $0 bars (e.g. months/days with no trades)
+      if(counts && counts[i] === 0){
+        ctx.save();
+        ctx.font = 'italic 500 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif';
+        ctx.fillStyle = mutedC;
+        ctx.textAlign = 'left';
+        ctx.fillText('no trades', bar.x + 6, bar.y);
+        ctx.restore();
+        return;
+      }
+      if(!val && !counts) return; // weekly chart: skip empty bars
       const label = fmtMoney(val);
       if(val >= 0){
         ctx.textAlign = 'left';
@@ -252,7 +301,8 @@ function horizontalBarOptions(labelFontSize){
     },
     scales: {
       y: { ticks: { color:mutedC, font:{size:labelFontSize}, autoSkip:false }, grid:{ display:false } },
-      x: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
+      // grace adds headroom on both ends so the value label of the longest bar never runs into the category labels
+      x: { grace: '20%', ticks: { color:mutedC, font:{size:10}, callback:(v)=>(v<0?'-':'')+'$'+Math.abs(v) }, grid:{ color:gridC } }
     }
   };
 }
@@ -271,11 +321,16 @@ function weekdayAggregate(trades){
 function renderWeekdayChart(trades){
   const wdLabels = ['Mon','Tue','Wed','Thu','Fri'];
   const wdData = weekdayAggregate(trades);
+  const wdCounts = [0,0,0,0,0];
+  trades.forEach(t => {
+    const dow = parseLocal(t.date).getDay();
+    if(dow >= 1 && dow <= 5) wdCounts[dow-1] += 1;
+  });
   const ctx = document.getElementById('weekdayChart').getContext('2d');
   if(weekdayChartInstance) weekdayChartInstance.destroy();
   weekdayChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: { labels: wdLabels, datasets: [{ data: wdData, backgroundColor: barColors(wdData), borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
+    data: { labels: wdLabels, datasets: [{ data: wdData, counts: wdCounts, backgroundColor: barColors(wdData), borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
     options: horizontalBarOptions(11),
     plugins: [barValueLabelPlugin]
   });
@@ -286,9 +341,13 @@ let monthlyChartInstance = null;
 let monthlyYear = new Date().getFullYear();
 function renderMonthlyChart(trades, year){
   const sums = new Array(12).fill(0);
+  const counts = new Array(12).fill(0);
   trades.forEach(t => {
-    const d = new Date(t.date + "T00:00:00");
-    if(d.getFullYear() === year) sums[d.getMonth()] += Number(t.pnl) || 0;
+    const d = parseLocal(t.date);
+    if(d.getFullYear() === year){
+      sums[d.getMonth()] += Number(t.pnl) || 0;
+      counts[d.getMonth()] += 1;
+    }
   });
   const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.getElementById('yearLabel').textContent = year;
@@ -296,7 +355,7 @@ function renderMonthlyChart(trades, year){
   if(monthlyChartInstance) monthlyChartInstance.destroy();
   monthlyChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data: sums, backgroundColor: barColors(sums), borderRadius: 4, maxBarThickness: 22, categoryPercentage: 0.75, barPercentage: 0.9 }] },
+    data: { labels, datasets: [{ data: sums, counts, backgroundColor: barColors(sums), borderRadius: 4, maxBarThickness: 22, categoryPercentage: 0.75, barPercentage: 0.9 }] },
     options: horizontalBarOptions(11),
     plugins: [barValueLabelPlugin]
   });
@@ -307,6 +366,8 @@ function renderMonthlyChart(trades, year){
 // entirely rather than shown as empty bars. Bars run horizontally, oldest week
 // at the top, and the card grows taller as more weeks accumulate. ----
 let weeklyChartInstance = null;
+let weeklyNewestFirst = false;
+try{ weeklyNewestFirst = localStorage.getItem('mmtrades-weekly-order') === 'newest'; }catch(e){ /* storage may be blocked */ }
 
 function mondayOf(dateObj){
   const d = new Date(dateObj);
@@ -321,7 +382,7 @@ function weeklyAggregate(trades){
   trades.forEach(t => {
     const d = new Date(t.date + "T00:00:00");
     const monday = mondayOf(d);
-    const key = monday.toISOString().slice(0,10);
+    const key = localKey(monday);
     buckets[key] = (buckets[key] || 0) + (Number(t.pnl) || 0);
   });
   const keys = Object.keys(buckets).sort();
@@ -339,6 +400,8 @@ function renderWeeklyChart(trades){
     const last = new Date(keys[keys.length-1] + "T00:00:00").toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
     document.getElementById('weeklyRangePill').textContent = `${first} – ${last}`;
   }
+  if(weeklyNewestFirst){ labels.reverse(); values.reverse(); }
+  document.getElementById('weeklyOrderBtn').innerHTML = weeklyNewestFirst ? 'Newest first &darr;' : 'Oldest first &darr;';
   // ~26px per week so every label stays readable
   document.getElementById('weeklyBody').style.height = Math.max(380, values.length * 26 + 40) + 'px';
   const ctx = document.getElementById('weeklyChart').getContext('2d');
@@ -351,7 +414,62 @@ function renderWeeklyChart(trades){
   });
 }
 
+// ---- Heatmap: net P&L for every weekday x month cell of the selected year ----
+function renderHeatmap(trades, year){
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+  const cells = DAYS.map(() => MONTHS.map(() => ({ pnl:0, n:0 })));
+  trades.forEach(t => {
+    const d = parseLocal(t.date);
+    if(d.getFullYear() !== year) return;
+    const dow = d.getDay();
+    if(dow < 1 || dow > 5) return;
+    const c = cells[dow-1][d.getMonth()];
+    c.pnl += Number(t.pnl) || 0;
+    c.n += 1;
+  });
+  let maxAbs = 0;
+  cells.forEach(row => row.forEach(c => { maxAbs = Math.max(maxAbs, Math.abs(c.pnl)); }));
+  const fmt0 = v => (v < 0 ? '-' : '') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
+  const plural = n => n + ' trade' + (n === 1 ? '' : 's');
+
+  function cellHtml(c, title){
+    if(c.n === 0) return `<td class="empty" title="${title}: no trades">&ndash;</td>`;
+    const alpha = (0.15 + 0.5 * (maxAbs ? Math.abs(c.pnl) / maxAbs : 0)).toFixed(2);
+    const rgb = c.pnl >= 0 ? '--green-rgb' : '--red-rgb';
+    return `<td style="background:rgba(var(${rgb}), ${alpha})" title="${title}: ${fmtMoney(c.pnl)} over ${plural(c.n)}">${fmt0(c.pnl)}<small>${plural(c.n)}</small></td>`;
+  }
+  function totalHtml(sum, n, title){
+    if(n === 0) return `<td class="total empty" title="${title}: no trades">&ndash;</td>`;
+    return `<td class="total" title="${title}: ${fmtMoney(sum)} over ${plural(n)}"><span class="${sum >= 0 ? 'pnl-pos' : 'pnl-neg'}">${fmt0(sum)}</span><small>${plural(n)}</small></td>`;
+  }
+
+  let html = '<table class="heat"><thead><tr><th class="rowh"></th>' +
+    MONTHS.map(m => `<th>${m}</th>`).join('') + '<th>Total</th></tr></thead><tbody>';
+  const colSum = new Array(12).fill(0), colN = new Array(12).fill(0);
+  let grandSum = 0, grandN = 0;
+  DAYS.forEach((day, r) => {
+    let rowSum = 0, rowN = 0;
+    html += `<tr><th class="rowh">${day}</th>`;
+    MONTHS.forEach((m, c) => {
+      const cell = cells[r][c];
+      rowSum += cell.pnl; rowN += cell.n;
+      colSum[c] += cell.pnl; colN[c] += cell.n;
+      html += cellHtml(cell, `${day} ${m} ${year}`);
+    });
+    grandSum += rowSum; grandN += rowN;
+    html += totalHtml(rowSum, rowN, `${day} ${year}`) + '</tr>';
+  });
+  html += '<tr><th class="rowh">Total</th>';
+  MONTHS.forEach((m, c) => { html += totalHtml(colSum[c], colN[c], `${m} ${year}`); });
+  html += totalHtml(grandSum, grandN, `All ${year}`) + '</tr></tbody></table>';
+
+  document.getElementById('heatmap').innerHTML = html;
+  document.getElementById('heatYearLabel').textContent = `${year} \u00b7 follows the year arrows above`;
+}
+
 function renderAll(){
+  renderHeatmap(TRADES, monthlyYear);
   if(typeof Chart === 'undefined'){
     document.querySelectorAll('.chart-body').forEach(el => {
       el.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);text-align:center;padding:0 12px;">Charts library couldn\'t load (network/ad-blocker may be blocking it).</div>';
@@ -363,8 +481,14 @@ function renderAll(){
   renderWeeklyChart(TRADES);
 }
 
-document.getElementById('yearPrev').addEventListener('click', () => { monthlyYear -= 1; renderMonthlyChart(TRADES, monthlyYear); });
-document.getElementById('yearNext').addEventListener('click', () => { monthlyYear += 1; renderMonthlyChart(TRADES, monthlyYear); });
+document.getElementById('yearPrev').addEventListener('click', () => { monthlyYear -= 1; renderHeatmap(TRADES, monthlyYear); renderMonthlyChart(TRADES, monthlyYear); });
+document.getElementById('yearNext').addEventListener('click', () => { monthlyYear += 1; renderHeatmap(TRADES, monthlyYear); renderMonthlyChart(TRADES, monthlyYear); });
+
+document.getElementById('weeklyOrderBtn').addEventListener('click', () => {
+  weeklyNewestFirst = !weeklyNewestFirst;
+  try{ localStorage.setItem('mmtrades-weekly-order', weeklyNewestFirst ? 'newest' : 'oldest'); }catch(e){ /* storage may be blocked */ }
+  if(typeof Chart !== 'undefined') renderWeeklyChart(TRADES);
+});
 
 // ---- Theme toggle ----
 function applyThemeButtonIcon(){
@@ -434,6 +558,7 @@ setInterval(() => {
 }, AUTO_REFRESH_MS);
 
 updateStatusLine();
+renderHeatmap(TRADES, monthlyYear); // doesn't need Chart.js, so draw it right away
 loadChartJs().then(renderAll);
 </script>
 </body>

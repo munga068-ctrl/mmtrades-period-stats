@@ -108,65 +108,62 @@
 </head>
 <body>
 
-  <div class="top-bar">
-    <h1>Period PnL</h1>
-    <div class="top-actions">
-      <button class="icon-btn" id="syncBtn" title="Refresh with the latest synced data">
-        <svg id="syncIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
-      </button>
-      <button class="icon-btn" id="themeBtn" title="Toggle theme">
-        <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-      </button>
-    </div>
+<div class="top-bar">
+  <h1>Period PnL</h1>
+  <div class="top-actions">
+    <button class="icon-btn" id="syncBtn" title="Refresh with the latest synced data">
+      <svg id="syncIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+    </button>
+    <button class="icon-btn" id="themeBtn" title="Toggle theme">
+      <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
   </div>
-  <div class="status-line" id="statusLine">&nbsp;</div>
+</div>
+<div class="status-line" id="statusLine">&nbsp;</div>
 
-  <div class="section-label">Day &amp; Calendar Breakdown</div>
-
-  <div class="chart-row">
-    <div class="chart-card">
-      <h3>P&amp;L by Day of Week</h3>
-      <div class="chart-body"><canvas id="weekdayChart"></canvas></div>
-    </div>
-
-    <div class="chart-card">
-      <h3>
-        <span id="monthlyChartTitle">PnL by Month</span>
-        <span class="month-nav">
-          <button id="yearPrev" title="Previous year">‹</button>
-          <span id="yearLabel">2026</span>
-          <button id="yearNext" title="Next year">›</button>
-        </span>
-      </h3>
-      <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
-    </div>
+<div class="section-label">Day &amp; Calendar Breakdown</div>
+<div class="chart-row">
+  <div class="chart-card">
+    <h3>P&amp;L by Day of Week</h3>
+    <div class="chart-body"><canvas id="weekdayChart"></canvas></div>
   </div>
-
-  <div class="section-label">All-Time Weekly Breakdown</div>
-
-  <div class="chart-card weekly">
+  <div class="chart-card">
     <h3>
-      <span>PnL by Week</span>
-      <span class="summary-pill" id="weeklyRangePill"></span>
+      <span id="monthlyChartTitle">PnL by Month</span>
+      <span class="month-nav">
+        <button id="yearPrev" title="Previous year">‹</button>
+        <span id="yearLabel">2026</span>
+        <button id="yearNext" title="Next year">›</button>
+      </span>
     </h3>
-    <div class="chart-body"><canvas id="weeklyChart"></canvas></div>
+    <div class="chart-body"><canvas id="monthlyChart"></canvas></div>
   </div>
+</div>
 
-  <footer>Synced from Notion &middot; mirrors the MMTrades Dashboard data source</footer>
+<div class="section-label">All-Time Weekly Breakdown</div>
+<div class="chart-card weekly">
+  <h3>
+    <span>PnL by Week</span>
+    <span class="summary-pill" id="weeklyRangePill"></span>
+  </h3>
+  <div class="chart-body" id="weeklyBody"><canvas id="weeklyChart"></canvas></div>
+</div>
+
+<footer>Synced from Notion &middot; mirrors the MMTrades Dashboard data source</footer>
 
 <script>
 // SYNC_MARKER_START
 // Auto-updated by .github/workflows/sync.yml — do not hand-edit between the markers.
-const DATA_SYNCED_AT = "2026-11-19T10:40:14.153Z";
+const DATA_SYNCED_AT = "2026-11-19T10:35:14.757Z";
 const TRADES = [{"date":"2026-01-05","pnl":-67.18},{"date":"2026-01-06","pnl":208.73},{"date":"2026-01-07","pnl":-45.56},{"date":"2026-01-07","pnl":-86.12},{"date":"2026-01-09","pnl":-156.24},{"date":"2026-01-09","pnl":-47.38},{"date":"2026-01-12","pnl":26.02},{"date":"2026-01-13","pnl":18.44},{"date":"2026-01-13","pnl":-80.7},{"date":"2026-01-13","pnl":-44.37},{"date":"2026-02-06","pnl":-50.73},{"date":"2026-02-06","pnl":-48},{"date":"2026-02-10","pnl":-23.96},{"date":"2026-02-11","pnl":131.47},{"date":"2026-02-13","pnl":173.26},{"date":"2026-02-19","pnl":-80.76},{"date":"2026-02-19","pnl":-66.46},{"date":"2026-02-23","pnl":70.69},{"date":"2026-02-24","pnl":-48.09},{"date":"2026-02-24","pnl":-9.27},{"date":"2026-02-26","pnl":31.61},{"date":"2026-02-27","pnl":-27.58},{"date":"2026-02-27","pnl":-61.94},{"date":"2026-03-09","pnl":-48.13},{"date":"2026-03-11","pnl":145.03},{"date":"2026-03-18","pnl":1.74},{"date":"2026-03-23","pnl":-21.34},{"date":"2026-04-09","pnl":150.48},{"date":"2026-04-10","pnl":-29.85},{"date":"2026-04-22","pnl":-22.78},{"date":"2026-04-29","pnl":-40.22},{"date":"2026-05-04","pnl":-23.72},{"date":"2026-05-15","pnl":-23.74},{"date":"2026-05-22","pnl":-38.47},{"date":"2026-05-28","pnl":-12.66},{"date":"2026-07-09","pnl":-48.79},{"date":"2026-07-16","pnl":199.87},{"date":"2026-07-17","pnl":41.31},{"date":"2026-07-22","pnl":-48.53},{"date":"2026-07-23","pnl":-38.84},{"date":"2026-09-04","pnl":-39.78},{"date":"2026-09-10","pnl":-63},{"date":"2026-09-14","pnl":-48.85},{"date":"2026-09-17","pnl":61.69},{"date":"2026-09-17","pnl":-49.16},{"date":"2026-09-17","pnl":-36.59},{"date":"2026-09-22","pnl":101},{"date":"2026-09-23","pnl":114.56},{"date":"2026-09-25","pnl":-51.76},{"date":"2026-10-05","pnl":-52.7},{"date":"2026-10-19","pnl":172.66},{"date":"2026-10-20","pnl":103.98},{"date":"2026-11-09","pnl":0.92},{"date":"2026-11-12","pnl":247},{"date":"2026-11-13","pnl":-61.6},{"date":"2026-11-18","pnl":17.82},{"date":"2026-11-18","pnl":2.82}];
 // SYNC_MARKER_END
 </script>
+
 <script>
 function fmtMoney(n){
   const sign = n < 0 ? '-' : '';
   return sign + '$' + Math.abs(n).toFixed(2);
 }
-
 function cv(name){
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -207,6 +204,59 @@ function updateStatusLine(){
   statusLine.textContent = `Last synced ${synced.toLocaleString()}${stale ? ' — sync may be delayed' : ''}`;
 }
 
+// ---- Horizontal bar helpers (categories on the Y axis, dollars on the X axis) ----
+
+// Draws the dollar value at the end of each bar: to the right of positive bars,
+// to the left of negative bars.
+const barValueLabelPlugin = {
+  id: 'barValueLabel',
+  afterDatasetsDraw(chart){
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    const data = chart.data.datasets[0].data;
+    const inkC = cv('--ink');
+    ctx.save();
+    ctx.font = '600 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = inkC;
+    meta.data.forEach((bar, i) => {
+      const val = data[i];
+      if(!val) return; // skip $0 bars (e.g. months/days with no trades)
+      const label = fmtMoney(val);
+      if(val >= 0){
+        ctx.textAlign = 'left';
+        ctx.fillText(label, bar.x + 6, bar.y);
+      }else{
+        ctx.textAlign = 'right';
+        ctx.fillText(label, bar.x - 6, bar.y);
+      }
+    });
+    ctx.restore();
+  }
+};
+
+function barColors(values){
+  return values.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
+}
+
+function horizontalBarOptions(labelFontSize){
+  const mutedC = cv('--muted');
+  const gridC = cv('--grid-line');
+  return {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    layout: { padding: { top: 10, bottom: 10, left: 4, right: 56 } },
+    plugins: {
+      legend: { display:false },
+      tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.x) } }
+    },
+    scales: {
+      y: { ticks: { color:mutedC, font:{size:labelFontSize}, autoSkip:false }, grid:{ display:false } },
+      x: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
+    }
+  };
+}
+
 // ---- Day of Week chart: cumulative P&L for Mon–Fri across all trades ----
 let weekdayChartInstance = null;
 function weekdayAggregate(trades){
@@ -219,26 +269,14 @@ function weekdayAggregate(trades){
   return sums;
 }
 function renderWeekdayChart(trades){
-  const mutedC = cv('--muted');
-  const gridC = cv('--grid-line');
   const wdLabels = ['Mon','Tue','Wed','Thu','Fri'];
   const wdData = weekdayAggregate(trades);
-  const wdColors = wdData.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
-
   const ctx = document.getElementById('weekdayChart').getContext('2d');
   if(weekdayChartInstance) weekdayChartInstance.destroy();
   weekdayChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: { labels: wdLabels, datasets: [{ data: wdData, backgroundColor: wdColors, borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 20, bottom: 10 } },
-      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
-      scales: {
-        x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
-        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
-      }
-    },
+    data: { labels: wdLabels, datasets: [{ data: wdData, backgroundColor: barColors(wdData), borderRadius: 4, maxBarThickness: 40, categoryPercentage: 0.55, barPercentage: 0.9 }] },
+    options: horizontalBarOptions(11),
     plugins: [barValueLabelPlugin]
   });
 }
@@ -253,59 +291,22 @@ function renderMonthlyChart(trades, year){
     if(d.getFullYear() === year) sums[d.getMonth()] += Number(t.pnl) || 0;
   });
   const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const mutedC = cv('--muted');
-  const gridC = cv('--grid-line');
-  const colors = sums.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
-
   document.getElementById('yearLabel').textContent = year;
-
   const ctx = document.getElementById('monthlyChart').getContext('2d');
   if(monthlyChartInstance) monthlyChartInstance.destroy();
   monthlyChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data: sums, backgroundColor: colors, borderRadius: 4, maxBarThickness: 30, categoryPercentage: 0.6, barPercentage: 0.9 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 20, bottom: 10 } },
-      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } } },
-      scales: {
-        x: { ticks: { color:mutedC, font:{size:11} }, grid:{ display:false } },
-        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
-      }
-    },
+    data: { labels, datasets: [{ data: sums, backgroundColor: barColors(sums), borderRadius: 4, maxBarThickness: 22, categoryPercentage: 0.75, barPercentage: 0.9 }] },
+    options: horizontalBarOptions(11),
     plugins: [barValueLabelPlugin]
   });
 }
 
 // ---- Weekly chart: sum of P&L per trading week (Mon–Sun bucket, labeled by
 // that week's Monday), across all-time. Weeks with zero trades are skipped
-// entirely rather than shown as empty bars, matching how sparse weeks read
-// most clearly in a waterfall-style view. ----
+// entirely rather than shown as empty bars. Bars run horizontally, oldest week
+// at the top, and the card grows taller as more weeks accumulate. ----
 let weeklyChartInstance = null;
-
-// A small in-canvas label plugin: draws the dollar value above/below each bar,
-// the way the ChartBase weekly report renders its values directly on the bars.
-const barValueLabelPlugin = {
-  id: 'barValueLabel',
-  afterDatasetsDraw(chart){
-    const { ctx } = chart;
-    const meta = chart.getDatasetMeta(0);
-    const data = chart.data.datasets[0].data;
-    const inkC = cv('--ink');
-    ctx.save();
-    ctx.font = '600 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = inkC;
-    meta.data.forEach((bar, i) => {
-      const val = data[i];
-      if(!val) return; // skip $0 bars (e.g. months/days with no trades)
-      const label = fmtMoney(val);
-      const y = val >= 0 ? bar.y - 6 : bar.y + 14;
-      ctx.fillText(label, bar.x, y);
-    });
-    ctx.restore();
-  }
-};
 
 function mondayOf(dateObj){
   const d = new Date(dateObj);
@@ -333,33 +334,19 @@ function weeklyAggregate(trades){
 }
 function renderWeeklyChart(trades){
   const { keys, labels, values } = weeklyAggregate(trades);
-  const mutedC = cv('--muted');
-  const gridC = cv('--grid-line');
-  const colors = values.map(v => v >= 0 ? 'rgba(15,138,76,0.75)' : 'rgba(209,53,43,0.75)');
-
   if(keys.length){
     const first = new Date(keys[0] + "T00:00:00").toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
     const last = new Date(keys[keys.length-1] + "T00:00:00").toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
     document.getElementById('weeklyRangePill').textContent = `${first} – ${last}`;
   }
-
+  // ~26px per week so every label stays readable
+  document.getElementById('weeklyBody').style.height = Math.max(380, values.length * 26 + 40) + 'px';
   const ctx = document.getElementById('weeklyChart').getContext('2d');
   if(weeklyChartInstance) weeklyChartInstance.destroy();
   weeklyChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, maxBarThickness: 34, categoryPercentage: 0.7, barPercentage: 0.9 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 20, bottom: 10 } },
-      plugins: {
-        legend: { display:false },
-        tooltip: { callbacks: { label: (ctx)=>fmtMoney(ctx.parsed.y) } }
-      },
-      scales: {
-        x: { ticks: { color:mutedC, font:{size:10}, maxRotation:0, autoSkip:true, maxTicksLimit: 14 }, grid:{ display:false } },
-        y: { ticks: { color:mutedC, font:{size:10}, callback:(v)=>'$'+v }, grid:{ color:gridC } }
-      }
-    },
+    data: { labels, datasets: [{ data: values, backgroundColor: barColors(values), borderRadius: 4, maxBarThickness: 18, categoryPercentage: 0.8, barPercentage: 0.9 }] },
+    options: horizontalBarOptions(10),
     plugins: [barValueLabelPlugin]
   });
 }
@@ -401,6 +388,7 @@ document.getElementById('themeBtn').addEventListener('click', () => {
 // TRADES out of the SYNC_MARKER block, same pattern as the other dashboards ----
 const syncBtn = document.getElementById('syncBtn');
 const syncIcon = document.getElementById('syncIcon');
+
 async function refetchSyncedData(){
   const url = window.location.pathname + '?t=' + Date.now();
   const res = await fetch(url, { cache: 'no-store' });
@@ -414,6 +402,7 @@ async function refetchSyncedData(){
   if(syncedAtMatch) window.DATA_SYNCED_AT_LIVE = syncedAtMatch[1];
   if(tradesMatch) window.TRADES_LIVE = JSON.parse(tradesMatch[1]);
 }
+
 async function runSync(){
   syncBtn.disabled = true;
   syncIcon.classList.add('spin');
